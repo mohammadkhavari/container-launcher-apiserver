@@ -32,9 +32,10 @@ class RunList(APIView):
         app = self.get_app(pk)
         client = self.get_docker_client()
         serializer = AppSerializer(app)
-        ser_envs = serializer.data["envs"]
-        print(type(app.envs), type(ser_envs))
-        labels = {"appId":str(app.id)}
+
+        # label appId on container and 
+        # specify applied environment variables, command, app name cause they may change
+        labels = {"appId":str(app.id), "applied_envs":str(app.envs), "applied_cmd":app.command, "app_name": app.name}
         container = client.containers.run(image=app.image, command=app.command, detach=True, labels=labels, environment=serializer.data["envs"])
         serializer = RunSerializer(container)
         return Response(serializer.data,status=status.HTTP_200_OK)
