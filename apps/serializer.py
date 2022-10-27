@@ -6,7 +6,17 @@ class AppSerializer(serializers.ModelSerializer):
     class Meta:
         model = App
         fields = ["id", "created", "name", "image", "command", "envs"]
+    
+    def validate_envs(self, value):
+        if isinstance(value, dict) and \
+            all(isinstance(k, str) and (isinstance(v,
+        str)) for k,v in value.items()):
+            return value
 
+        raise serializers.ValidationError("Value must be valid list of string key pairs")
+        
+
+# Validation is not needed here as we dont deserialization data
 class RunSerializer(serializers.Serializer):
     launched_at = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()

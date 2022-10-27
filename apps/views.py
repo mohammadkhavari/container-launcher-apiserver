@@ -41,7 +41,7 @@ class RunList(APIView):
         try:
             client = self.get_docker_client()
             container = client.containers.run(image=app.image, command=app.command, detach=True, labels=labels, environment=serializer.data["envs"])
-        except docker.errors.NotFound or docker.errors.ImageNotFound as err:
+        except docker.errors.NotFound or docker.errors.ImageNotFound:
             raise exceptions.ImageNotFound
         except docker.errors.DockerException:
             raise exceptions.DockerAPIError
