@@ -1,7 +1,7 @@
 from apps.models import App
 from apps.serializer import AppSerializer, RunSerializer
 from apps.utils import exceptions
-from rest_framework import generics
+from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,11 +9,7 @@ from django.http import Http404
 import docker
 
 
-class AppList(generics.ListCreateAPIView):
-    queryset = App.objects.all()
-    serializer_class = AppSerializer
-
-class AppDetail(generics.RetrieveUpdateDestroyAPIView):
+class AppViewSet(viewsets.ModelViewSet):
     queryset = App.objects.all()
     serializer_class = AppSerializer
 
