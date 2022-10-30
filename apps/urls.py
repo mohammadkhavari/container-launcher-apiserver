@@ -1,8 +1,12 @@
-from django.urls import path
-from apps.views import AppList, AppDetail, RunList
+from django.urls import path, include
+from apps.views import AppViewSet, RunList
+from rest_framework.routers import DefaultRouter
+
+
+router = DefaultRouter()
+router.register(r'apps', AppViewSet, basename="apps")
 
 urlpatterns = [
-    path('', AppList.as_view()),
-    path('<int:pk>/', AppDetail.as_view()),
-    path('<int:pk>/run', RunList.as_view())
+    path('', include(router.urls)),
+    path('apps/<int:pk>/run', RunList.as_view())
 ]

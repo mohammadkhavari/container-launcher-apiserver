@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from apps.models import App
-from docker.models.containers import Container
+from apps.models import App, Run
+import docker
 
 class AppSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,34 +14,19 @@ class AppSerializer(serializers.ModelSerializer):
             return value
 
         raise serializers.ValidationError("Value must be valid list of string key pairs")
-        
 
-# Validation is not needed here as we dont deserialization data
-class RunSerializer(serializers.Serializer):
-    launched_at = serializers.SerializerMethodField()
+class RunSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
-    app_name = serializers.SerializerMethodField()
-    image = serializers.SerializerMethodField()
-    command = serializers.SerializerMethodField()
-    envs = serializers.SerializerMethodField()
-    id = serializers.CharField()
 
-    def get_launched_at(self, obj):
-        utc_str = obj.attrs["Created"]
-        return utc_str
+    class Meta:
+        model = Run
+        fields = '__all__'  
 
-    def get_image(self, obj):
-        return " ,".join(obj.image.tags)
-
-    # As the task wants there are only two considered states
     def get_status(self, obj):
-        return "Finished" if obj.status == "exited" else "Running"
-    
-    def get_command(self, obj):
-        return obj.labels["applied_cmd"]
-    
-    def get_envs(self, obj):
-        return eval(obj.labels["applied_envs"])
-
-    def get_app_name(self, obj):
-        return obj.labels["app_name"]
+        try:
+            client = docker.from_env()
+            container = client.containers.get(obj.containerId)
+            return "Finished" if container.status == "exited" else "Running"
+        except docker.errors.DockerException: # NotFound or APIError
+            # if there's only two (Running, Finishied) states. Finished is more sensible here altough it may be destroyed without finishing its job.
+            return "Finished"
